@@ -1,0 +1,106 @@
+@import url('https://fonts.googleapis.com/css2?family=Russo+One&display=swap');
+
+:root {
+    --spartan-red: #d92332;
+    --metro-yellow: #ffc107;
+}
+
+body {
+    font-size: 1.3rem;
+    background-color: #212529;
+    line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5, h6, th {
+    font-family: 'Russo One', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--spartan-red) !important;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6);
+}
+
+.nav-link, .navbar-brand {
+    font-family: 'Russo One', sans-serif;
+    font-size: 1.2rem;
+    color: #ffffff !important;
+    text-transform: uppercase;
+}
+
+.nav-link:hover, footer a:hover {
+    color: var(--spartan-red) !important;
+    transition: color 0.3s ease;
+}
+
+.btn {
+    font-family: "Russo One", sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.text-warning {
+    color: var(--metro-yellow) !important;
+}
+
+.btn-warning {
+    background-color: var(--metro-yellow) !important;
+    border-color: var(--metro-yellow) !important;
+    color: #000 !important;
+}
+
+.btn-outline-warning {
+    color: var(--metro-yellow) !important;
+    border-color: var(--metro-yellow) !important;
+}
+
+.btn-outline-warning:hover {
+    background-color: var(--metro-yellow) !important;
+    color: #000 !important;
+}
+
+.badge {
+    font-family: 'Russo One', sans-serif;
+    background-color: var(--spartan-red) !important;
+    text-shadow:
+    1px 1px 0 #000,
+    -1px -1px 0 #000,
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+    2px 2px 4px rgba(0, 0, 0, 0.5);
+    letter-spacing: 1px;
+}
+
+.small, small {
+    font-size: 1.1rem !important;
+    font-weight: normal;
+}
+
+h6, .card-subtitle {
+    font-size: 1.25rem !important;
+    color: #e0e0e0 !important;
+    margin-bottom: 10px;
+}
+
+p, .card-text, td {
+    font-size: 1.2rem;
+    color: #d1d1d1;
+}
+
+.text-muted, .text-secondary {
+    color: #adb5db !important;
+}
+
+.display-4, .display-5 {
+    font-size: 3.5rem;
+    text-shadow: 3px 3px 5px rgba(0, 0, 0, 0.9);
+    color: var(--spartan-red) !important;
+}
+
+.card-body .mt-auto h5 {
+    color: #ffffff !important;
+    text-shadow: none;
+    font-weight: bold;
+}
+
+.card-title {
+    color: var(--metro-yellow) !important;
+}
