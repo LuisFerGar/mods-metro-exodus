@@ -17,7 +17,7 @@ $inicial = substr($nombre_mostrar, 0, 1);
 // --- A. HISTORIAL DE COMPRAS (Ya funcionaba) ---
 $historial_compras = [];
 if (!empty($usuario_sesion)) {
-    $api_url = "http://localhost/MetroModsStore/app/controller/api_miscompras.php?usuario=" . $usuario_sesion;
+    $api_url = "http://localhost/mods-metro-exodus/app/controller/api_miscompras.php?usuario=" . $usuario_sesion;
     $json_data = @file_get_contents($api_url);
     if ($json_data !== false) {
         $data = json_decode($json_data, true);
@@ -31,7 +31,7 @@ if (!empty($usuario_sesion)) {
 $lista_deseos_detalles = [];
 if (!empty($usuario_sesion)) {
     // 1. Obtener IDs de deseos
-    $api_deseos_ids = "http://localhost/MetroModsStore/app/controller/api_milista.php?usuario=" . $usuario_sesion;
+    $api_deseos_ids = "http://localhost/mods-metro-exodus/app/controller/api_milista.php?usuario=" . $usuario_sesion;
     $json_ids = @file_get_contents($api_deseos_ids);
     
     if ($json_ids !== false) {
@@ -41,7 +41,7 @@ if (!empty($usuario_sesion)) {
             
             // 2. Obtener Catálogo Completo para buscar nombres/precios
             // (Esto no es lo más eficiente pero es lo más rápido sin crear otra API)
-            $api_catalogo = "http://localhost/MetroModsStore/app/controller/api_listarproductos.php";
+            $api_catalogo = "http://localhost/mods-metro-exodus/app/controller/api_listarproductos.php";
             $json_cat = @file_get_contents($api_catalogo);
             
             if ($json_cat !== false) {
