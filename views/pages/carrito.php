@@ -42,7 +42,7 @@ if (empty($lista_ids_para_api)) {
     unset($_SESSION['dados_venda']);
 } else {
     // URL da API que buscará os detalhes dos produtos por ID (Usando o seu nome de arquivo)
-    $api_url = 'http://localhost/MetroModsStore/app/controller/api_productosencarrito.php';
+    $api_url = 'http://localhost/mods-metro-exodus/app/controller/api_productosencarrito.php';
 
     // Prepara o payload para enviar os IDs via POST
     $payload = http_build_query([

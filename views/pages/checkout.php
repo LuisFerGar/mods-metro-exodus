@@ -28,7 +28,7 @@ $total = $dados_venda['total'];
 $produtos_json = json_encode($dados_venda['produtos']);
 
 // 2. URL de la API de Venda (Ajusta si tu carpeta se llama diferente)
-$api_url = 'http://localhost/MetroModsStore/app/controller/api_realizarventa.php';
+$api_url = 'http://localhost/mods-metro-exodus/app/controller/api_realizarventa.php';
 
 // 3. Prepara el payload
 $payload = http_build_query([

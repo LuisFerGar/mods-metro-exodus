@@ -27,7 +27,7 @@ $usuario_id = $_SESSION['id_usuario'] ?? null;
 
 $ids_deseados=[];
 if($usuario_id) {
-    $api_deseos="http://localhost/MetroModsStore/app/controller/api_milista.php?usuario=" .$usuario_id;
+    $api_deseos="http://localhost/mods-metro-exodus/app/controller/api_milista.php?usuario=" .$usuario_id;
     $json_deseos=@file_get_contents($api_deseos);
 
     if($json_deseos !== false) {
@@ -40,7 +40,7 @@ if($usuario_id) {
 
 if ($usuario_id) {
     // Ajusta la carpeta si es necesario
-    $api_historial = "http://localhost/MetroModsStore/app/controller/api_miscompras.php?usuario=" . $usuario_id;
+    $api_historial = "http://localhost/mods-metro-exodus/app/controller/api_miscompras.php?usuario=" . $usuario_id;
     $json_historial = @file_get_contents($api_historial);
     
     if ($json_historial !== false) {
@@ -56,7 +56,7 @@ if ($usuario_id) {
 // ---------------------------------------------------------
 
 // CARGAR CATÁLOGO COMPLETO
-$api_url = 'http://localhost/MetroModsStore/app/controller/api_listarproductos.php'; 
+$api_url = 'http://localhost/mods-metro-exodus/app/controller/api_listarproductos.php'; 
 $productos = [];
 $mensagem_catalogo = 'Cargando productos...';
 

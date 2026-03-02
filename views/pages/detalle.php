@@ -8,7 +8,7 @@ $usuario_id = $_SESSION['id_usuario'] ?? null;
 // --- 1. OBTENER LISTA DE DESEOS (Corrección del Error) ---
 $ids_deseados = []; // Inicializamos vacío para evitar error
 if ($usuario_id) {
-    $api_deseos = "http://localhost/MetroModsStore/app/controller/api_milista.php?usuario=" . $usuario_id;
+    $api_deseos = "http://localhost/mods-metro-exodus/app/controller/api_milista.php?usuario=" . $usuario_id;
     $json_deseos = @file_get_contents($api_deseos);
     
     if ($json_deseos !== false) {
@@ -36,7 +36,7 @@ $estado_producto = "Desconocido";
 $imagen = "img/placeholder.jpg"; // NUEVO: Variable para la imagen
 $categoria = "Suministros";      // NUEVO: Variable para categoría
 
-$api_url = 'http://localhost/MetroModsStore/app/controller/api_listarproductos.php';
+$api_url = 'http://localhost/mods-metro-exodus/app/controller/api_listarproductos.php';
 $json_data = @file_get_contents($api_url);
 
 if ($json_data !== false) {
@@ -62,7 +62,7 @@ if ($json_data !== false) {
 // --- 4. VERIFICAR SI YA LO COMPRÓ ---
 $ya_lo_tiene = false;
 if ($usuario_id) {
-    $api_historial = "http://localhost/MetroModsStore/app/controller/api_miscompras.php?usuario=" . $usuario_id;
+    $api_historial = "http://localhost/mods-metro-exodus/app/controller/api_miscompras.php?usuario=" . $usuario_id;
     $json_hist = @file_get_contents($api_historial);
     if ($json_hist) {
         $data_hist = json_decode($json_hist, true);
