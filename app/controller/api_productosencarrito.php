@@ -7,7 +7,7 @@ $hostname = "localhost";
 $basedatos = "metro_bd";
 $usuario = "root";
 $contrasena = "";
-$port = 3307;
+$port = 3306;
 
 // Função auxiliar para passar parâmetros por referência, 
 // necessária para o mysqli::bind_param com um número dinâmico de IDs.

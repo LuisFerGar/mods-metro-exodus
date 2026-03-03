@@ -12,7 +12,7 @@ $hostname = "localhost";
 $basedatos = "metro_bd";
 $usuario = "root";
 $contrasena = "";
-$port = 3307;
+$port = 3306;
 
 // Variável de resposta padrão
 $response = [

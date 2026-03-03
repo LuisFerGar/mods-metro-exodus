@@ -12,9 +12,9 @@ $hostname="localhost";
 $basedatos="metro_bd";
 $usuario="root";
 $contrasena="";
-//$puerto=3307;
+$puerto=3306;
 
-$mysqli = new mysqli($hostname,$usuario,$contrasena,$basedatos);
+$mysqli = new mysqli($hostname,$usuario,$contrasena,$basedatos, $puerto);
 if($mysqli->connect_error){ die("Error DB: ".$mysqli->connect_error); }
 
 $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
@@ -29,7 +29,7 @@ if($id <= 0 || $nombre === '' || $categoria === '' || $precio === null || $image
 }
 
 $stmt = $mysqli->prepare("UPDATE PRODUCTOS 
-                          SET NOMBRE_PRODUCTO=?, CATEGORIA=?, PRECIO=?, IMAGEN=? 
+                          SET NOMBRE_PRODUCTO=?, ID_CATEGORIA=?, PRECIO=?, IMAGEN=? 
                           WHERE COD_PROD=?");
 $stmt->bind_param("ssdsi", $nombre, $categoria, $precio, $imagen, $id);
 

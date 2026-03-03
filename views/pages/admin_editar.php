@@ -11,7 +11,6 @@ $basedatos="metro_bd";
 $usuario="root";
 $contrasena="";
 
-
 $mysqli = new mysqli($hostname,$usuario,$contrasena,$basedatos);
 if($mysqli->connect_error){ die("Error DB: ".$mysqli->connect_error); }
 
@@ -21,7 +20,8 @@ if($id <= 0){
     exit;
 }
 
-$stmt = $mysqli->prepare("SELECT COD_PROD, NOMBRE_PRODUCTO, CATEGORIA, PRECIO, IMAGEN FROM PRODUCTOS WHERE COD_PROD=?");
+// 1. BUSCAR EL PRODUCTO (Cambiamos la consulta para traer la información actualizada)
+$stmt = $mysqli->prepare("SELECT * FROM PRODUCTOS WHERE COD_PROD=?");
 $stmt->bind_param("i",$id);
 $stmt->execute();
 $prod = $stmt->get_result()->fetch_assoc();
@@ -30,12 +30,21 @@ if(!$prod){
     echo "<div class='alert alert-danger'>Producto no encontrado</div>";
     exit;
 }
+
+// 2. BUSCAR TODAS LAS CATEGORÍAS (Para armar el menú desplegable)
+$categorias = [];
+$res_cat = $mysqli->query("SELECT * FROM CATEGORIAS");
+if($res_cat) {
+    while($c = $res_cat->fetch_assoc()) {
+        $categorias[] = $c;
+    }
+}
 ?>
 
 <div class="container py-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h3 class="text-warning fw-bold mb-0">EDITAR SUMINISTRO #<?php echo (int)$prod['COD_PROD']; ?></h3>
-        <a href="index.php?pagina=mods" class="btn btn-outline-secondary">Volver</a>
+        <a href="index.php?pagina=dashboard" class="btn btn-outline-secondary">Volver</a>
     </div>
 
     <div class="card bg-dark border-secondary text-light">
@@ -52,9 +61,14 @@ if(!$prod){
 
                 <div class="mb-3">
                     <label class="form-label">Categoría</label>
-                    <input class="form-control bg-secondary text-light border-0"
-                           name="categoria" required
-                           value="<?php echo htmlspecialchars($prod['CATEGORIA']); ?>">
+                    <select class="form-select bg-secondary text-light border-0" name="categoria" required>
+                        <option value="">Seleccione una categoría</option>
+                        <?php foreach($categorias as $cat): ?>
+                            <option value="<?php echo $cat['ID_CATEGORIA']; ?>" <?php echo ($cat['ID_CATEGORIA'] == $prod['ID_CATEGORIA']) ? 'selected' : ''; ?>>
+                                <?php echo htmlspecialchars($cat['NOMBRE_CATEGORIA']); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
 
                 <div class="mb-3">
@@ -78,7 +92,7 @@ if(!$prod){
                         <i class="bi bi-save2-fill me-2"></i>Guardar cambios
                     </button>
                     <a class="btn btn-outline-danger"
-                       href="index.php?pagina=mods">
+                       href="index.php?pagina=dashboard">
                        Cancelar
                     </a>
                 </div>

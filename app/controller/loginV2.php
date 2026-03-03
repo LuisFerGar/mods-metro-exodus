@@ -9,7 +9,7 @@ $hostname = "localhost";
 $basedatos = "metro_bd"; 
 $usuario = "root";
 $contrasena = "";
-$port = 3307;
+$port = 3306;
 
 $loginusuario = $_POST['usuario'];
 $logincontra = $_POST['password'];

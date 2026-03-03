@@ -56,7 +56,7 @@ if ($usuario_id) {
 // ---------------------------------------------------------
 
 // CARGAR CATÁLOGO COMPLETO
-$api_url = 'http://localhost/mods-metro-exodus/app/controller/api_listarproductos.php'; 
+$api_url = 'http://localhost/MetroModsStore/app/controller/api_listarproductos.php'; 
 $productos = [];
 $mensagem_catalogo = 'Cargando productos...';
 

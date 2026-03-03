@@ -6,7 +6,7 @@ if (!isset($_SESSION['id_usuario'])) {
     echo json_encode(['status' => 'error', 'message' => 'Debes iniciar sesión.']); exit;
 }
 
-$mysqli = new mysqli("localhost", "root", "", "metro_bd", 3307);
+$mysqli = new mysqli("localhost", "root", "", "metro_bd", 3306);
 
 $accion = $_POST['accion'] ?? '';
 $id_valoracion = $_POST['id_valoracion'] ?? 0;

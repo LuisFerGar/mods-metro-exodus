@@ -13,7 +13,7 @@ $hostname = "localhost";
 $basedatos = "metro_bd"; 
 $usuario = "root"; 
 $contrasena = ""; 
-$port = 3307;
+$port = 3306;
 
 $mysqli = new mysqli($hostname, $usuario, $contrasena, $basedatos, $port);
 
