@@ -9,11 +9,12 @@ $hostname = "localhost";
 $basedatos = "metro_bd"; 
 $usuario = "root";
 $contrasena = "";
+$port = 3307;
 
 $loginusuario = $_POST['usuario'];
 $logincontra = $_POST['password'];
 
-$msqli = new mysqli($hostname, $usuario, $contrasena, $basedatos);
+$msqli = new mysqli($hostname, $usuario, $contrasena, $basedatos, $port);
 
 if ($msqli->connect_error) {
     die("Error DB: " . $msqli->connect_error);

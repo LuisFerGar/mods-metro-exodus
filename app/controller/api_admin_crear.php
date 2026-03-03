@@ -11,7 +11,9 @@ $hostname = "localhost";
 $basedatos = "metro_bd"; 
 $usuario = "root"; 
 $contrasena = "";
-$mysqli = new mysqli($hostname, $usuario, $contrasena, $basedatos);
+$port = 3307;
+$mysqli = new mysqli($hostname, $usuario, $contrasena, $basedatos, $port);
+
 
 if($mysqli->connect_errno) {
     echo json_encode(['status' => 'error', 'message' => 'Error de conexión a la base de datos.']);

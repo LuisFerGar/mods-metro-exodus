@@ -19,7 +19,7 @@ $nuevo_nombre = $_POST['nombre'] ?? '';
 $nuevo_correo = $_POST['email'] ?? '';
 $nueva_contra = $_POST['new_password'] ?? '';
 
-$mysqli = new mysqli($hostname, $usuario, $contrasena, $basedatos);
+$mysqli = new mysqli($hostname, $usuario, $contrasena, $basedatos, $port);
 if ($mysqli->connect_error) { echo json_encode(['error' => "Error DB"]); exit; }
 
 // VERIFICAR SI EL NUEVO USUARIO YA EXISTE (Si lo cambió)

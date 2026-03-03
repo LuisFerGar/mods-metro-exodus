@@ -11,14 +11,14 @@ $hostname = "localhost";
 $basedatos = "metro_bd"; 
 $usuario = "root"; 
 $contrasena = "";
-
+$port = 3307;
 // Array para armazenar a resposta da API (inclui status, mensagem e os dados dos produtos)
 $response = array();
 $response['productos'] = [];
 $response['status'] = 'error'; // Status inicial de erro
 
 // Conexão com o Banco de Dados
-$mysqli = new mysqli($hostname, $usuario, $contrasena, $basedatos);
+$mysqli = new mysqli($hostname, $usuario, $contrasena, $basedatos, $port);
 
 if ($mysqli->connect_error) {
     // SE ISSO FALHAR, SEU ERRO É AQUI. Verifique se o MySQL/MariaDB está rodando e se a DB "metro3" existe.

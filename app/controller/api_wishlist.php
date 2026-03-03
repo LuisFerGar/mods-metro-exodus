@@ -11,6 +11,7 @@ $hostname = "localhost";
 $basedatos = "metro_bd";
 $usuario = "root";
 $contrasena = "";
+$port = 3307;
 
 $respuesta = array();
 
@@ -26,7 +27,7 @@ if (!isset($_POST['producto_id'])) {
 }
 $id_producto = (int)$_POST['producto_id'];
 
-$mysqli = new mysqli($hostname, $usuario, $contrasena, $basedatos);
+$mysqli = new mysqli($hostname, $usuario, $contrasena, $basedatos, $port);
 
 if ($mysqli->connect_error) {
     echo json_encode(['status' => 'error', 'message' => "Error DB: " . $mysqli->connect_error]);

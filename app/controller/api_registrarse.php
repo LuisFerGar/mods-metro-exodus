@@ -14,6 +14,7 @@ $hostname = "localhost";
 $basedatos = "metro_bd"; 
 $usuario = "root";
 $contrasena = "";
+$port = 3307;
 
 $respuesta = array();
 
@@ -28,7 +29,7 @@ $reg_correo = $_POST['correo'];
 $reg_usuario = $_POST['usuario'];
 $reg_contra = $_POST['password']; // Texto plano
 
-$msqli = new mysqli($hostname, $usuario, $contrasena, $basedatos);
+$msqli = new mysqli($hostname, $usuario, $contrasena, $basedatos, $port);
 
 if ($msqli->connect_error) {
     echo json_encode(['error' => "ERROR DE CONEXIÓN: " . $msqli->connect_error]);
