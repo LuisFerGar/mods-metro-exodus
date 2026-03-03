@@ -77,6 +77,34 @@ if ($json_data === false) {
         $mensagem_catalogo = 'Error en la API: ' . ($data['message'] ?? 'N/A');
     }
 }
+// --- FILTRO POR PRECIO (FRONT) ---
+$min = filter_input(INPUT_GET, 'min', FILTER_VALIDATE_FLOAT);
+$max = filter_input(INPUT_GET, 'max', FILTER_VALIDATE_FLOAT);
+
+// Normaliza: si vienen vacíos => null
+$min = ($min === false || $min === null) ? null : (float)$min;
+$max = ($max === false || $max === null) ? null : (float)$max;
+
+// Si ambos vienen y están invertidos, los intercambiamos
+if ($min !== null && $max !== null && $min > $max) {
+    [$min, $max] = [$max, $min];
+}
+
+if ($min !== null || $max !== null) {
+    $productos_filtrados = array_filter($productos, function($p) use ($min, $max) {
+        // OJO: tu API puede traer PRECIO como string. Lo forzamos a float.
+        $precio = isset($p['PRECIO']) ? (float)$p['PRECIO'] : (float)($p['precio'] ?? 0);
+
+        if ($min !== null && $precio < $min) return false;
+        if ($max !== null && $precio > $max) return false;
+        return true;
+    });
+
+    // Reindexa para evitar índices raros
+    $productos = array_values($productos_filtrados);
+
+    $mensagem_catalogo = 'Resultados del filtro: ' . count($productos);
+}
 ?>
 
 <div class="container-fluid">
@@ -98,8 +126,15 @@ if ($json_data === false) {
                 <form action="index.php" method="GET">
                     <input type="hidden" name="pagina" value="mods">
                     <div class="d-flex gap-2">
-                        <input type="number" name="min" class="form-control bg-secondary text-light border-0" placeholder="Min">
-                        <input type="number" name="max" class="form-control bg-secondary text-light border-0" placeholder="Max">
+                        <input type="number" name="min" min="0" step="1"
+                        value="<?php echo htmlspecialchars($_GET['min'] ?? ''); ?>"
+                        class="form-control bg-secondary text-light border-0"
+                        placeholder="Min">
+
+                        <input type="number" name="max" min="0" step="1"
+                        value="<?php echo htmlspecialchars($_GET['max'] ?? ''); ?>"
+                        class="form-control bg-secondary text-light border-0"
+                        placeholder="Max">
                     </div>
                     <button type="submit" class="btn btn-outline-warning w-100 mt-3">Filtrar</button>
                 </form>
