@@ -12,9 +12,9 @@ $hostname="localhost";
 $basedatos="metro_bd";
 $usuario="root";
 $contrasena="";
-$puerto=3307;
+//$puerto=3307;
 
-$mysqli = new mysqli($hostname,$usuario,$contrasena,$basedatos,$puerto);
+$mysqli = new mysqli($hostname,$usuario,$contrasena,$basedatos);
 if($mysqli->connect_error){ die("Error DB: ".$mysqli->connect_error); }
 
 $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
@@ -34,7 +34,7 @@ $stmt = $mysqli->prepare("UPDATE PRODUCTOS
 $stmt->bind_param("ssdsi", $nombre, $categoria, $precio, $imagen, $id);
 
 if($stmt->execute()){
-    echo "<script>alert('Producto actualizado'); window.location.href='index.php?pagina=dashboard_admin';</script>";
+    echo "<script>alert('Producto actualizado'); window.location.href='index.php?pagina=admin_dashboard';</script>";
 } else {
     echo "<script>alert('Error al actualizar'); window.history.back();</script>";
 }
