@@ -14,8 +14,8 @@ $hostname = "localhost";
 $basedatos = "metro_bd";
 $usuario = "root";
 $contrasena = "";
-
-$mysqli = new mysqli($hostname, $usuario, $contrasena, $basedatos);
+$port = 3307;
+$mysqli = new mysqli($hostname, $usuario, $contrasena, $basedatos, $port);
 
 // Variable para guardar la respuesta final
 $respuesta = [];

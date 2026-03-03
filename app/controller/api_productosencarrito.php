@@ -7,6 +7,7 @@ $hostname = "localhost";
 $basedatos = "metro_bd";
 $usuario = "root";
 $contrasena = "";
+$port = 3307;
 
 // Função auxiliar para passar parâmetros por referência, 
 // necessária para o mysqli::bind_param com um número dinâmico de IDs.
@@ -29,7 +30,7 @@ $response = [
 ];
 
 // 1. Conexão com o Banco de Dados (usando mysqli)
-$mysqli = new mysqli($hostname, $usuario, $contrasena, $basedatos);
+$mysqli = new mysqli($hostname, $usuario, $contrasena, $basedatos, $port);
 
 if ($mysqli->connect_error) {
     $response['message'] = "ERRO DE CONEXÃO COM A BASE DE DADOS! Detalhes: " . $mysqli->connect_error;

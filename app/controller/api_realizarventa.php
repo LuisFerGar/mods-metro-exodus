@@ -12,6 +12,7 @@ $hostname = "localhost";
 $basedatos = "metro_bd";
 $usuario = "root";
 $contrasena = "";
+$port = 3307;
 
 // Variável de resposta padrão
 $response = [
@@ -27,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 // 2. Conexão com o Banco de Dados
-$mysqli = new mysqli($hostname, $usuario, $contrasena, $basedatos);
+$mysqli = new mysqli($hostname, $usuario, $contrasena, $basedatos, $port);
 
 if ($mysqli->connect_error) {
     $response['message'] = "Error de conexcion en la base de datos! Detalhes: " . $mysqli->connect_error;
