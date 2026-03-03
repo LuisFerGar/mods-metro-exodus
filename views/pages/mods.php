@@ -55,11 +55,22 @@ if ($usuario_id) {
 }
 // ---------------------------------------------------------
 
-// CARGAR CATÁLOGO COMPLETO
-$api_url = 'http://localhost/MetroModsStore/app/controller/api_listarproductos.php'; 
-$productos = [];
-$mensagem_catalogo = 'Cargando productos...';
+/// CARGAR CATEGORÍAS
+$api_cat_url = 'http://localhost/MetroModsStore/app/controller/api_categorias.php';
+$lista_categorias = [];
+$json_cat = @file_get_contents($api_cat_url);
+if ($json_cat !== false) {
+    $data_cat = json_decode($json_cat, true);
+    if (isset($data_cat['status']) && $data_cat['status'] === 'success') {
+        $lista_categorias = $data_cat['categorias'];
+    }
+}
 
+// CAPTURAR EL FILTRO DE CATEGORÍA SI EL USUARIO HACE CLIC
+$filtro_categoria = isset($_GET['cat']) ? (int)$_GET['cat'] : null; 
+
+// CARGAR CATÁLOGO COMPLETO DE PRODUCTOS (¡No olvides esta parte!)
+$api_url = 'http://localhost/MetroModsStore/app/controller/api_listarproductos.php'; 
 $json_data = @file_get_contents($api_url); 
 
 if ($json_data === false) {
@@ -67,12 +78,30 @@ if ($json_data === false) {
 } else {
     $data = json_decode($json_data, true);
     if (isset($data['status']) && $data['status'] === 'success') {
+        
+        // --- AQUÍ VA EL NUEVO BLOQUE DE FILTRADO ---
         if (!empty($data['productos'])) {
             $productos = $data['productos'];
-            $mensagem_catalogo = 'Suministros disponibles: ' . count($productos);
+            
+            // Si el usuario seleccionó una categoría, filtramos la lista
+            if ($filtro_categoria) {
+                $filtrados = [];
+                foreach ($productos as $p) {
+                    if ((int)$p['ID_CATEGORIA'] === $filtro_categoria) {
+                        $filtrados[] = $p;
+                    }
+                }
+                $productos = $filtrados; // Reemplazamos la lista con los filtrados
+            }
+            
+            // Actualizamos el mensaje dependiendo de si quedaron productos después de filtrar
+            $mensagem_catalogo = empty($productos) ? 'No hay suministros en esta categoría.' : 'Suministros disponibles: ' . count($productos);
+            
         } else {
             $mensagem_catalogo = 'No hay suministros en este momento.';
         }
+        // --- FIN DEL BLOQUE DE FILTRADO ---
+
     } else {
         $mensagem_catalogo = 'Error en la API: ' . ($data['message'] ?? 'N/A');
     }
@@ -87,10 +116,16 @@ if ($json_data === false) {
                 <h4>Categorías</h4>
                 <hr class="border-secondary">
                 <ul class="list-unstyled">
-                    <li class="mb-2"><a href="index.php?pagina=mods" class="text-warning text-decoration-none fw-bold">➜ Ver Todo</a></li>
-                    <li class="mb-2"><a href="#" class="text-light text-decoration-none">➜ Armas</a></li>
-                    <li class="mb-2"><a href="#" class="text-light text-decoration-none">➜ Trajes</a></li>
-                    <li class="mb-2"><a href="#" class="text-light text-decoration-none">➜ Suministros</a></li>
+                    <li class="mb-2">
+                        <a href="index.php?pagina=mods" class="text-warning text-decoration-none fw-bold">➜ Ver Todo</a>
+                    </li>
+                    <?php foreach ($lista_categorias as $cat): ?>
+                        <li class="mb-2">
+                            <a href="index.php?pagina=mods&cat=<?php echo $cat['ID_CATEGORIA']; ?>" class="text-light text-decoration-none hover-warning">
+                                ➜ <?php echo htmlspecialchars($cat['NOMBRE_CATEGORIA']); ?>
+                            </a>
+                        </li>
+                    <?php endforeach; ?>
                 </ul>
                 
                 <h4 class="mt-4">Precio</h4>

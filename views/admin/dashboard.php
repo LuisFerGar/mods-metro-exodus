@@ -18,7 +18,9 @@ $stats = ['total_prod' => 0, 'total_users' => 0, 'total_ventas' => 0, 'ingresos'
 
 if(!$mysqli->connect_error) {
     // 1. Obtener lista de productos
-    $sql = "SELECT * FROM PRODUCTOS";
+    $sql = "SELECT P.*, C.NOMBRE_CATEGORIA as CATEGORIA 
+            FROM PRODUCTOS P 
+            INNER JOIN CATEGORIAS C ON P.ID_CATEGORIA = C.ID_CATEGORIA";
     $resultado = $mysqli->query($sql);
     while($fila = $resultado->fetch_assoc()) { $productos[] = $fila; }
 

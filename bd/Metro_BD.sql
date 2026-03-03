@@ -77,3 +77,32 @@ CREATE TABLE MENSAJES (
     LEIDO BOOLEAN DEFAULT FALSE,
     PRIMARY KEY (ID_MENSAJE)
 );
+
+-- 1. Crear la nueva tabla de Categorías
+CREATE TABLE CATEGORIAS (
+    ID_CATEGORIA INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    NOMBRE_CATEGORIA VARCHAR(50) NOT NULL UNIQUE,
+    PRIMARY KEY (ID_CATEGORIA)
+);
+
+-- 2. Insertar tus categorías base
+INSERT INTO CATEGORIAS (NOMBRE_CATEGORIA) VALUES 
+('Armas'), 
+('Trajes'), 
+('Suministros');
+
+-- 3. Crear una nueva columna en PRODUCTOS para el ID de la categoría
+ALTER TABLE PRODUCTOS ADD COLUMN ID_CATEGORIA INT UNSIGNED DEFAULT 3;
+
+-- 4. Actualizar los productos existentes para enlazarlos con sus IDs correctos
+UPDATE PRODUCTOS SET ID_CATEGORIA = 1 WHERE CATEGORIA = 'Armas';
+UPDATE PRODUCTOS SET ID_CATEGORIA = 2 WHERE CATEGORIA = 'Trajes';
+UPDATE PRODUCTOS SET ID_CATEGORIA = 3 WHERE CATEGORIA = 'Suministros';
+
+-- 5. Crear la Relación (Llave Foránea) para que estén conectadas
+ALTER TABLE PRODUCTOS ADD CONSTRAINT fk_categoria 
+FOREIGN KEY (ID_CATEGORIA) REFERENCES CATEGORIAS(ID_CATEGORIA) 
+ON UPDATE CASCADE ON DELETE RESTRICT;
+
+-- 6. Borrar la columna vieja de texto (Ya no la necesitamos)
+ALTER TABLE PRODUCTOS DROP COLUMN CATEGORIA;
