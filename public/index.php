@@ -10,6 +10,10 @@ $pagina = isset($_GET['pagina']) ? $_GET['pagina'] : 'inicio';
 include views_path . 'layouts/header.php';
 
 switch ($pagina) {
+    case 'admin_editar':
+        include views_path . 'pages/admin_editar.php';
+        break;
+    
     case 'inicio':
         include views_path . 'pages/inicio.php';
         break;
@@ -52,6 +56,10 @@ switch ($pagina) {
         break;
     case 'api_actualizar':
         require_once '../app/controller/api_actualizar_perfil.php';
+        exit;
+        break;
+    case 'api_admin_actualizar':
+        require_once '../app/controller/api_admin_actualizar.php';
         exit;
         break;
     case 'api_wishlist':
