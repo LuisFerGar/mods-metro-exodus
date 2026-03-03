@@ -175,53 +175,94 @@ if(!$mysqli->connect_error) {
 </div>
 
 <script>
-let idParaBorrar = null; // Variable global para recordar qué ID vamos a borrar
-const modalEl = new bootstrap.Modal(document.getElementById('modalEliminar'));
-const alerta = document.getElementById('alertaError');
-const textoError = document.getElementById('textoError');
+document.addEventListener('DOMContentLoaded', function () {
 
-// A. Función que abre el modal y llena los datos
-function prepararEliminacion(id, nombre, imagen) {
-    idParaBorrar = id;
-    
-    // Llenamos el modal con la info del producto
-    document.getElementById('nombreBorrar').textContent = nombre;
-    document.getElementById('imgBorrar').src = imagen;
-    
-    // Reseteamos alertas
-    alerta.classList.add('d-none');
-    
-    // Mostramos el modal
-    modalEl.show();
-}
+    // -------------------------------------------------------
+    // A. VARIABLES Y REFERENCIAS INICIALES
+    // -------------------------------------------------------
 
-// B. Función que ejecuta el borrado cuando das click en "SÍ, ELIMINAR"
-document.getElementById('btnConfirmarBorrar').addEventListener('click', function() {
-    if (!idParaBorrar) return;
+    // Variable privada para almacenar el ID del producto a eliminar
+    let idParaBorrar = null;
 
-    var datos = new FormData();
-    datos.append('id', idParaBorrar);
+    // Instancia del modal de Bootstrap
+    const modalEl = new bootstrap.Modal(document.getElementById('modalEliminar'));
 
-    fetch('index.php?pagina=api_admin_eliminar', {
-        method: 'POST',
-        body: datos
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.status === 'success') {
-            // Si se borró, cerramos modal y recargamos
-            modalEl.hide();
-            location.reload();
-        } else {
-            // Si falló (ej: Ya comprado), mostramos la alerta DENTRO del modal
+    // Elementos del DOM utilizados para mostrar errores dentro del modal
+    const alerta = document.getElementById('alertaError');
+    const textoError = document.getElementById('textoError');
+
+    // Botón de confirmación dentro del modal
+    const btnConfirmar = document.getElementById('btnConfirmarBorrar');
+
+
+    // -------------------------------------------------------
+    // B. FUNCIÓN QUE PREPARA Y ABRE EL MODAL
+    // -------------------------------------------------------
+
+    // Se asigna al objeto window para que pueda ser llamada
+    // desde el atributo onclick del botón en la tabla
+    window.prepararEliminacion = function(id, nombre, imagen) {
+
+        // Guardamos el ID del producto seleccionado
+        idParaBorrar = id;
+
+        // Insertamos dinámicamente los datos en el modal
+        document.getElementById('nombreBorrar').textContent = nombre;
+        document.getElementById('imgBorrar').src = imagen;
+
+        // Reiniciamos el estado de alerta por si hubo un error previo
+        alerta.classList.add('d-none');
+
+        // Mostramos el modal
+        modalEl.show();
+    }
+
+
+    // -------------------------------------------------------
+    // C. EVENTO DE CONFIRMACIÓN DE ELIMINACIÓN
+    // -------------------------------------------------------
+
+    btnConfirmar.addEventListener('click', function() {
+
+        // Validación básica: si no hay ID, no se ejecuta nada
+        if (!idParaBorrar) return;
+
+        // Creamos objeto FormData para enviar datos vía POST
+        var datos = new FormData();
+        datos.append('id', idParaBorrar);
+
+        // Petición asíncrona al controlador PHP
+        fetch('index.php?pagina=api_admin_eliminar', {
+            method: 'POST',
+            body: datos
+        })
+        .then(res => res.json())
+        .then(data => {
+
+            // Si la eliminación fue exitosa
+            if (data.status === 'success') {
+
+                // Cerramos el modal
+                modalEl.hide();
+
+                // Recargamos la página para actualizar la tabla
+                location.reload();
+
+            } else {
+
+                // Si ocurre un error (ej: integridad referencial),
+                // mostramos el mensaje dentro del modal
+                alerta.classList.remove('d-none');
+                textoError.textContent = data.mensaje;
+            }
+        })
+        .catch(() => {
+
+            // Error de conexión o fallo inesperado
             alerta.classList.remove('d-none');
-            textoError.textContent = data.mensaje; // Muestra el mensaje de "Protección Activa"
-        }
-    })
-    .catch(err => {
-        console.error(err);
-        alerta.classList.remove('d-none');
-        textoError.textContent = "Error de conexión con el servidor.";
+            textoError.textContent = "Error de conexión con el servidor.";
+        });
     });
+
 });
 </script>
