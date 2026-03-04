@@ -24,13 +24,13 @@ if(!$mysqli->connect_error) {
     $resultado = $mysqli->query($sql);
     while($fila = $resultado->fetch_assoc()) { $productos[] = $fila; }
 
-    // 2. ESTADÍSTICAS (NUEVO)
+    // 2. ESTADÍSTICAS
     
     // Contar Productos
     $sql_p = "SELECT COUNT(*) as total FROM PRODUCTOS";
     $stats['total_prod'] = $mysqli->query($sql_p)->fetch_assoc()['total'];
 
-    // Contar Usuarios (Excluyendo admins si quieres)
+    // Contar Usuarios
     $sql_u = "SELECT COUNT(*) as total FROM CLIENTE WHERE ROL = 'usuario'";
     $stats['total_users'] = $mysqli->query($sql_u)->fetch_assoc()['total'];
 
@@ -38,8 +38,7 @@ if(!$mysqli->connect_error) {
     $sql_v = "SELECT COUNT(*) as total FROM COMPRA";
     $stats['total_ventas'] = $mysqli->query($sql_v)->fetch_assoc()['total'];
     
-    // Calcular Ingresos Totales (Suma de precios de productos vendidos)
-    // Hacemos un JOIN para sumar el precio de cada producto vendido
+    // Calcular Ingresos Totales
     $sql_money = "SELECT SUM(P.PRECIO) as total_bs 
                   FROM COMPRA C 
                   JOIN PRODUCTOS P ON C.COD_PROD = P.COD_PROD";
@@ -102,11 +101,16 @@ if(!$mysqli->connect_error) {
         </div>
     </div>
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4>Inventario de Armamento</h4>
-        <a href="index.php?pagina=admin_crear" class="btn btn-warning fw-bold">
-            <i class="bi bi-plus-circle-fill"></i> NUEVO SUMINISTRO
-        </a>
+    <div class="d-flex justify-content-between align-items-center mb-4 text-uppercase">
+        <h4 class="text-danger fw-bold mb-0">INVENTARIO DE ARMAMENTO</h4>
+        <div class="d-flex gap-3">
+            <button type="button" class="btn btn-outline-warning fw-bold px-3" onclick="crearNuevaCategoria()">
+                <i class="bi bi-tags-fill me-1"></i> NUEVA CATEGORÍA
+            </button>
+            <a href="index.php?pagina=admin_crear" class="btn btn-warning fw-bold px-3">
+                <i class="bi bi-plus-circle-fill"></i> NUEVO SUMINISTRO
+            </a>
+        </div>
     </div>
 
     <div class="card bg-dark border-secondary shadow-lg">
@@ -192,11 +196,35 @@ if(!$mysqli->connect_error) {
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
+function crearNuevaCategoria() {
+    // Abre una ventana nativa del navegador para pedir el nombre
+    const nombreCat = prompt("🔧 Ingresa el nombre de la nueva categoría:");
+    
+    if (nombreCat && nombreCat.trim() !== "") {
+        const formData = new FormData();
+        formData.append('nombre_categoria', nombreCat.trim());
 
-    // -------------------------------------------------------
-    // A. VARIABLES Y REFERENCIAS INICIALES
-    // -------------------------------------------------------
+        fetch('index.php?pagina=api_admin_crear_categoria', {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.status === 'success') {
+                alert("✅ " + data.mensaje);
+                location.reload(); // Recarga la página para actualizar las listas desplegables
+            } else {
+                alert("❌ Error: " + data.mensaje);
+            }
+        })
+        .catch(err => {
+            alert("Error de conexión al servidor.");
+            console.error(err);
+        });
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function () {
 
     // Variable privada para almacenar el ID del producto a eliminar
     let idParaBorrar = null;
@@ -211,75 +239,38 @@ document.addEventListener('DOMContentLoaded', function () {
     // Botón de confirmación dentro del modal
     const btnConfirmar = document.getElementById('btnConfirmarBorrar');
 
-
-    // -------------------------------------------------------
-    // B. FUNCIÓN QUE PREPARA Y ABRE EL MODAL
-    // -------------------------------------------------------
-
-    // Se asigna al objeto window para que pueda ser llamada
-    // desde el atributo onclick del botón en la tabla
     window.prepararEliminacion = function(id, nombre, imagen) {
-
-        // Guardamos el ID del producto seleccionado
         idParaBorrar = id;
-
-        // Insertamos dinámicamente los datos en el modal
         document.getElementById('nombreBorrar').textContent = nombre;
         document.getElementById('imgBorrar').src = imagen;
-
-        // Reiniciamos el estado de alerta por si hubo un error previo
         alerta.classList.add('d-none');
-
-        // Mostramos el modal
         modalEl.show();
     }
 
-
-    // -------------------------------------------------------
-    // C. EVENTO DE CONFIRMACIÓN DE ELIMINACIÓN
-    // -------------------------------------------------------
-
     btnConfirmar.addEventListener('click', function() {
-
-        // Validación básica: si no hay ID, no se ejecuta nada
         if (!idParaBorrar) return;
 
-        // Creamos objeto FormData para enviar datos vía POST
         var datos = new FormData();
         datos.append('id', idParaBorrar);
 
-        // Petición asíncrona al controlador PHP
         fetch('index.php?pagina=api_admin_eliminar', {
             method: 'POST',
             body: datos
         })
         .then(res => res.json())
         .then(data => {
-
-            // Si la eliminación fue exitosa
             if (data.status === 'success') {
-
-                // Cerramos el modal
                 modalEl.hide();
-
-                // Recargamos la página para actualizar la tabla
                 location.reload();
-
             } else {
-
-                // Si ocurre un error (ej: integridad referencial),
-                // mostramos el mensaje dentro del modal
                 alerta.classList.remove('d-none');
                 textoError.textContent = data.mensaje;
             }
         })
         .catch(() => {
-
-            // Error de conexión o fallo inesperado
             alerta.classList.remove('d-none');
             textoError.textContent = "Error de conexión con el servidor.";
         });
     });
-
 });
 </script>

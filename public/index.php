@@ -13,7 +13,7 @@ $pagina = isset($_GET['pagina']) ? $_GET['pagina'] : 'inicio';
 // ====================================================================
 $apis = ['api_leer_comentarios', 'api_guardar_comentario', 'api_gestionar_comentario', 
          'api_registro', 'api_actualizar', 'api_admin_actualizar', 'api_wishlist', 
-         'api_contacto', 'api_admin_crear', 'api_admin_eliminar'];
+         'api_contacto', 'api_admin_crear', 'api_admin_eliminar', 'api_valorar', 'api_admin_crear_categoria'];
 
 if (in_array($pagina, $apis)) {
     switch ($pagina) {
@@ -46,6 +46,12 @@ if (in_array($pagina, $apis)) {
             exit;
         case 'api_admin_eliminar':
             require_once '../app/controller/api_admin_eliminar.php';
+            exit;
+        case 'api_valorar':
+        require_once '../app/controller/api_valorar.php';
+        exit;
+        case 'api_admin_crear_categoria':
+            require_once '../app/controller/api_admin_crear_categoria.php';
             exit;
     }
 }

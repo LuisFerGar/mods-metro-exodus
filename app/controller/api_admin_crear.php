@@ -1,4 +1,14 @@
 <?php
+// Conexión para traer categorías
+$mysqli_cat = new mysqli("localhost", "root", "", "metro_bd");
+$lista_categorias = [];
+if (!$mysqli_cat->connect_error) {
+    $resultado = $mysqli_cat->query("SELECT * FROM CATEGORIAS");
+    while ($fila = $resultado->fetch_assoc()) {
+        $lista_categorias[] = $fila;
+    }
+}
+
 if(session_status() === PHP_SESSION_NONE) { session_start(); }
 ob_clean(); header('Content-Type: application/json');
 

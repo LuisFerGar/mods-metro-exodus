@@ -93,5 +93,9 @@ CREATE TABLE BITACORA (
     UNIQUE KEY (USUARIO, COD_PROD)
 );
 
--- [NOTA] La tabla VALORACIONES ya no se utiliza. Si existe en la base de datos
---       puedes eliminarla manualmente o migrar sus registros a BITACORA.
+CREATE TABLE valoraciones (
+    usuario_id VARCHAR(50) NOT NULL,
+    producto_id INT NOT NULL,
+    puntuacion INT NOT NULL,
+    PRIMARY KEY (usuario_id, producto_id)
+);

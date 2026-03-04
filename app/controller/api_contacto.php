@@ -55,7 +55,7 @@ if ($stmt) {
         $respuesta = ['status' => 'error', 'message' => "Error al guardar: " . $stmt->error];
     }
     $stmt->close();
-} else {
+} else {-
     $respuesta = ['status' => 'error', 'message' => "Error en la consulta SQL: " . $mysqli->error];
 }
 

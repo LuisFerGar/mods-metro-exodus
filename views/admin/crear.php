@@ -7,6 +7,15 @@ if(!isset($_SESSION['usuario_logueado']) || $_SESSION['rol_usuario'] !== 'admin'
     exit();
 }
 
+// Conexión para traer categorías dinámicamente
+$mysqli_cat = new mysqli("localhost", "root", "", "metro_bd");
+$lista_categorias = [];
+if (!$mysqli_cat->connect_error) {
+    $resultado = $mysqli_cat->query("SELECT * FROM CATEGORIAS");
+    while ($fila = $resultado->fetch_assoc()) {
+        $lista_categorias[] = $fila;
+    }
+}
 ?>
 
 <div class="container py-5">
@@ -14,7 +23,7 @@ if(!isset($_SESSION['usuario_logueado']) || $_SESSION['rol_usuario'] !== 'admin'
         <div class="col-lg-8">
             <div class="card bg-dark border-secondary shadow-lg">
                 <div class="card-header bg-black border-secondary d-flex justify-content-between align-items-center">
-                    <h3 class="mb-0">NUEVO SUMINISTRO</h3>
+                    <h3 class="mb-0 text-warning fw-bold">NUEVO SUMINISTRO</h3>
                     <a href="index.php?pagina=admin_dashboard" class="btn btn-sm btn-outline-secondary">Cancelar</a>
                 </div>
                 <div class="card-body p-4">
@@ -36,11 +45,13 @@ if(!isset($_SESSION['usuario_logueado']) || $_SESSION['rol_usuario'] !== 'admin'
 
                             <div class="col-md-3 mb-3">
                                 <label class="form-label text-secondary">Categoría</label>
-                                <select name="categoria" class="form-select bg-secondary text-light border-0">
-                                    <option value="Armas">Armas</option>
-                                    <option value="Trajes">Trajes</option>
-                                    <option value="Suministros">Suministros</option>
-                                    <option value="Skins">Skins Visuales</option>
+                                <select name="categoria" class="form-select bg-secondary text-light border-0" required>
+                                    <option value="" disabled selected>Selecciona una...</option>
+                                    <?php foreach ($lista_categorias as $cat): ?>
+                                        <option value="<?php echo $cat['ID_CATEGORIA']; ?>">
+                                            <?php echo htmlspecialchars($cat['NOMBRE_CATEGORIA']); ?>
+                                        </option>
+                                    <?php endforeach; ?>
                                 </select>
                             </div>
                         </div>
