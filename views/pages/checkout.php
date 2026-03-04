@@ -1,73 +1,76 @@
 <?php
-// Garante que a sessão seja iniciada
+// 1. INICIAR SESIÓN
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Inicializa la mensaje de estado
 $status_message = 'Esperando procesamiento...';
 $status_type = 'info';
 
-// Usamos 'id_usuario' (español) para coincidir con tu Login
-$usuario_id = $_SESSION['id_usuario'] ?? null; 
+// Detectamos el nombre de usuario de la sesión (Anton123, etc.)
+$usuario_id = $_SESSION['id_usuario'] ?? $_SESSION['usuario_logueado'] ?? $_SESSION['usuario'] ?? null; 
 
 if (!$usuario_id) {
-    $_SESSION['checkout_status'] = ['message' => 'Error: Sesión no encontrada. Por favor, inicia sesión.', 'type' => 'danger'];
     header('Location: index.php?pagina=login'); 
     exit();
 }
 
-// 1. Verifica si los datos de venta están en la sesión
+// Verifica si los datos de venta están en la sesión
 if (!isset($_SESSION['dados_venda']) || empty($_SESSION['dados_venda']['produtos'])) {
     header('Location: index.php?pagina=carrito');
     exit();
 }
 
-$dados_venda = $_SESSION['dados_venda'];
-$total = $dados_venda['total'];
-$produtos_json = json_encode($dados_venda['produtos']);
+$produtos = $_SESSION['dados_venda']['produtos'];
 
-// 2. URL de la API de Venda (Ajusta si tu carpeta se llama diferente)
-$api_url = 'http://localhost/mods-metro-exodus/app/controller/api_realizarventa.php';
+// --- CONEXIÓN DIRECTA Y GUARDADO EN BASE DE DATOS (Sin APIs) ---
+$hostname = "localhost";
+$basedatos = "metro_bd";
+$usuario_db = "root";
+$contrasena_db = "";
 
-// 3. Prepara el payload
-$payload = http_build_query([
-    'total' => $total,
-    'produtos_json' => $produtos_json,
-    'usuario_id' => $usuario_id, 
-]);
+$mysqli = new mysqli($hostname, $usuario_db, $contrasena_db, $basedatos);
 
-$options = [
-    'http' => [
-        'header'  => "Content-type: application/x-www-form-urlencoded\r\n",
-        'method'  => 'POST',
-        'content' => $payload,
-        'timeout' => 30 
-    ],
-];
-$context  = stream_context_create($options);
-$json_data = @file_get_contents($api_url, false, $context);
-
-// 4. Procesa la respuesta
-if ($json_data === false) {
-    $status_message = 'Error: Fallo al conectar con el servidor de comercio (API).';
+if ($mysqli->connect_error) {
+    $status_message = 'Error crítico: No se pudo conectar a la base de datos central.';
     $status_type = 'danger';
 } else {
-    $data = json_decode($json_data, true);
-    
-    if (isset($data['status']) && $data['status'] === 'success') {
-        $api_message = $data['message'] ?? 'Compra Finalizada con Éxito.';
-        $status_message = '¡Transacción Aprobada! ' . htmlspecialchars($api_message);
+    // Iniciamos la transacción (para que no se guarde a medias)
+    $mysqli->begin_transaction();
+
+    try {
+        // Preparamos la inserción directa en la tabla COMPRA
+        $stmt = $mysqli->prepare("INSERT INTO COMPRA (USUARIO, COD_PROD, FECHA) VALUES (?, ?, NOW())");
+        
+        foreach ($produtos as $p) {
+            $cod_prod = (int)$p['id'];
+            $stmt->bind_param("si", $usuario_id, $cod_prod);
+            $stmt->execute();
+        }
+        $stmt->close();
+
+        // Confirmamos los cambios en la BD
+        $mysqli->commit();
+        
+        // ¡ÉXITO! Vaciamos el carrito
+        unset($_SESSION['dados_venda']); 
+        unset($_SESSION['carrito']);     
+        
+        $status_message = 'Suministros adquiridos. El equipo ha sido asignado a tu inventario exitosamente.';
         $status_type = 'success';
+
+    } catch (Exception $e) {
+        $mysqli->rollback(); // Revertimos si hay error
         
-        // --- AQUÍ ESTÁ LA MAGIA PARA VACIAR EL CARRITO ---
-        unset($_SESSION['dados_venda']); // Borra los datos temporales de venta
-        unset($_SESSION['carrito']);     // <--- ESTO BORRA LOS PRODUCTOS DEL CARRITO Y PONE EL CONTADOR EN 0
-        
-    } else {
-        $status_message = 'Error al procesar la compra: ' . ($data['message'] ?? 'Respuesta desconocida.');
+        // Error 1062 = Ya compraste esta arma antes
+        if ($mysqli->errno == 1062) {
+            $status_message = "Acceso denegado: Ya posees uno de estos artículos en tu bitácora de equipo.";
+        } else {
+            $status_message = "Fallo en la asignación: Error en el sistema central.";
+        }
         $status_type = 'danger';
     }
+    $mysqli->close();
 }
 ?>
 

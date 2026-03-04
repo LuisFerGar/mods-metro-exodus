@@ -19,22 +19,33 @@ if($mysqli->connect_error){ die("Error DB: ".$mysqli->connect_error); }
 
 $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
 $nombre = trim($_POST['nombre'] ?? '');
-$categoria = trim($_POST['categoria'] ?? '');
+$id_categoria = isset($_POST['categoria']) ? (int)$_POST['categoria'] : 0;
 $precio = isset($_POST['precio']) ? (float)$_POST['precio'] : null;
 $imagen = trim($_POST['imagen'] ?? '');
 
-if($id <= 0 || $nombre === '' || $categoria === '' || $precio === null || $imagen === ''){
+if($id <= 0 || $nombre === '' || $id_categoria <= 0 || $precio === null || $imagen === ''){
     echo "<script>alert('Datos inválidos'); window.history.back();</script>";
     exit;
 }
 
-$stmt = $mysqli->prepare("UPDATE PRODUCTOS 
-                          SET NOMBRE_PRODUCTO=?, ID_CATEGORIA=?, PRECIO=?, IMAGEN=? 
-                          WHERE COD_PROD=?");
-$stmt->bind_param("ssdsi", $nombre, $categoria, $precio, $imagen, $id);
+$sql = "UPDATE PRODUCTOS SET NOMBRE_PRODUCTO = ?, ID_CATEGORIA = ?, PRECIO = ?, IMAGEN = ? WHERE COD_PROD = ?";
+
+$stmt = $mysqli->prepare($sql);
+if (!$stmt) {
+    echo "<script>alert('Error en la preparación de la consulta'); window.history.back();</script>";
+    exit;
+}
+
+// Tipos: s = string (nombre), i = integer (id_categoria), d = double (precio), s = string (imagen), i = integer (id)
+$stmt->bind_param("sidsi", $nombre, $id_categoria, $precio, $imagen, $id);
 
 if($stmt->execute()){
-    echo "<script>alert('Producto actualizado'); window.location.href='index.php?pagina=admin_dashboard';</script>";
+    // Usamos una flash message en sesión para que el dashboard muestre la confirmación
+    $_SESSION['flash_success'] = 'Producto actualizado correctamente.';
+    header('Location: index.php?pagina=admin_dashboard');
+    exit;
 } else {
-    echo "<script>alert('Error al actualizar'); window.history.back();</script>";
+    $_SESSION['flash_error'] = 'Error al actualizar: ' . $stmt->error;
+    header('Location: index.php?pagina=admin_editar&id=' . $id);
+    exit;
 }

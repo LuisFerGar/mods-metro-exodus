@@ -49,7 +49,22 @@ if(!$mysqli->connect_error) {
 ?>
 
 <div class="container py-5">
-    
+    <?php if (session_status() === PHP_SESSION_NONE) { session_start(); } ?>
+    <?php if (!empty($_SESSION['flash_success'])): ?>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <?php echo htmlspecialchars($_SESSION['flash_success']); ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        <?php unset($_SESSION['flash_success']); ?>
+    <?php endif; ?>
+    <?php if (!empty($_SESSION['flash_error'])): ?>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <?php echo htmlspecialchars($_SESSION['flash_error']); ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        <?php unset($_SESSION['flash_error']); ?>
+    <?php endif; ?>
+
     <h2 class="text-danger fw-bold mb-4">PANEL DE CONTROL - ESTADÍSTICAS</h2>
 
     <div class="row mb-5">

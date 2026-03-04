@@ -79,17 +79,19 @@ CREATE TABLE MENSAJES (
 );
 -- --------------------------------------------------------
 
--- 7. TABLA DE VALORACIONES - NUEVA
-CREATE TABLE VALORACIONES (
-    ID_VALORACION INT UNSIGNED NOT NULL AUTO_INCREMENT,
+-- 7. TABLA DE BITÁCORA DE COMENTARIOS (reemplaza al antiguo módulo de valoraciones)
+CREATE TABLE BITACORA (
+    ID_REPORTE INT UNSIGNED NOT NULL AUTO_INCREMENT,
     USUARIO VARCHAR(50) NOT NULL,
     COD_PROD INT UNSIGNED NOT NULL,
-    ESTRELLAS INT NOT NULL CHECK(ESTRELLAS >= 1 AND ESTRELLAS <= 5),
     COMENTARIO TEXT NOT NULL,
     FECHA DATETIME DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (ID_VALORACION),
+    PRIMARY KEY (ID_REPORTE),
     FOREIGN KEY (USUARIO) REFERENCES CLIENTE(USUARIO) ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (COD_PROD) REFERENCES PRODUCTOS(COD_PROD) ON DELETE CASCADE ON UPDATE CASCADE,
-    -- Evita que el mismo usuario califique el mismo producto dos veces:
+    -- Evita que el mismo usuario deje más de un reporte por producto
     UNIQUE KEY (USUARIO, COD_PROD)
 );
+
+-- [NOTA] La tabla VALORACIONES ya no se utiliza. Si existe en la base de datos
+--       puedes eliminarla manualmente o migrar sus registros a BITACORA.

@@ -1,5 +1,4 @@
 <?php
-
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -7,72 +6,105 @@ if (session_status() === PHP_SESSION_NONE) {
 ob_clean();
 header('Content-Type: application/json; charset=utf-8');
 
-$hostname = "localhost";
-$basedatos = "metro_bd";
-$usuario = "root";
-$contrasena = "";
-$port = 3306;
-
-$respuesta = array();
-
 if (!isset($_SESSION['id_usuario'])) {
-    echo json_encode(['status' => 'error', 'message' => "Debes iniciar sesión para usar la lista de deseos."]);
+    http_response_code(401);
+    echo json_encode(['status' => 'error', 'message' => 'No autenticado']);
     exit;
 }
-$id_usuario = $_SESSION['id_usuario'];
 
 if (!isset($_POST['producto_id'])) {
-    echo json_encode(['status' => 'error', 'message' => "Falta el ID del producto."]);
+    http_response_code(400);
+    echo json_encode(['status' => 'error', 'message' => 'Parámetro producto_id faltante']);
     exit;
 }
-$id_producto = (int)$_POST['producto_id'];
 
-$mysqli = new mysqli($hostname, $usuario, $contrasena, $basedatos, $port);
+$id_usuario = trim($_SESSION['id_usuario']);
+$id_producto = (int) trim($_POST['producto_id']);
+$accion = isset($_POST['accion']) ? trim($_POST['accion']) : 'toggle';
+
+if ($id_producto < 1) {
+    http_response_code(400);
+    echo json_encode(['status' => 'error', 'message' => 'ID inválido']);
+    exit;
+}
+
+$mysqli = @new mysqli('localhost', 'root', '', 'metro_bd', 3306);
 
 if ($mysqli->connect_error) {
-    echo json_encode(['status' => 'error', 'message' => "Error DB: " . $mysqli->connect_error]);
+    http_response_code(500);
+    echo json_encode(['status' => 'error', 'message' => 'Error de BD']);
     exit;
 }
 
-$check_sql = "SELECT ID_DESEO FROM LISTA_DESEOS WHERE USUARIO = ? AND COD_PROD = ?";
-$stmt_check = $mysqli->prepare($check_sql);
-$stmt_check->bind_param("si", $id_usuario, $id_producto);
-$stmt_check->execute();
-$resultado = $stmt_check->get_result();
+$mysqli->set_charset('utf8mb4');
 
-if ($resultado->num_rows > 0) {
-    $delete_sql = "DELETE FROM LISTA_DESEOS WHERE USUARIO = ? AND COD_PROD = ?";
-    $stmt_del = $mysqli->prepare($delete_sql);
-    $stmt_del->bind_param("si", $id_usuario, $id_producto);
-    
-    if ($stmt_del->execute()) {
-        $respuesta['status'] = 'removed';
-        $respuesta['message'] = 'Eliminado de la lista de deseos.';
-        $respuesta['icon'] = 'bi-heart';
-    } else {
-        $respuesta['status'] = 'error';
-        $respuesta['message'] = 'Error al eliminar.';
+// === ELIMINAR ===
+if ($accion === 'eliminar') {
+    $stmt = $mysqli->prepare('DELETE FROM LISTA_DESEOS WHERE USUARIO = ? AND COD_PROD = ?');
+    if (!$stmt) {
+        http_response_code(500);
+        echo json_encode(['status' => 'error', 'message' => 'Error BD']);
+        exit;
     }
-    $stmt_del->close();
-
-} else {
-    $insert_sql = "INSERT INTO LISTA_DESEOS (USUARIO, COD_PROD) VALUES (?, ?)";
-    $stmt_add = $mysqli->prepare($insert_sql);
-    $stmt_add->bind_param("si", $id_usuario, $id_producto);
     
-    if ($stmt_add->execute()) {
-        $respuesta['status'] = 'added';
-        $respuesta['message'] = 'Agregado a la lista de deseos.';
-        $respuesta['icon'] = 'bi-heart-fill';
-    } else {
-        $respuesta['status'] = 'error';
-        $respuesta['message'] = 'Error al guardar.';
-    }
-    $stmt_add->close();
+    $stmt->bind_param('si', $id_usuario, $id_producto);
+    $stmt->execute();
+    
+    http_response_code(200);
+    echo json_encode(['status' => 'removed', 'message' => 'Eliminado']);
+    $stmt->close();
+    $mysqli->close();
+    exit;
 }
 
-$stmt_check->close();
-$mysqli->close();
+// === AGREGAR ===
+if ($accion === 'agregar' || $accion === 'toggle') {
+    // Verificar que existe el producto
+    $stmt = $mysqli->prepare('SELECT 1 FROM PRODUCTOS WHERE COD_PROD = ?');
+    $stmt->bind_param('i', $id_producto);
+    $stmt->execute();
+    $exists = $stmt->get_result()->num_rows > 0;
+    $stmt->close();
+    
+    if (!$exists) {
+        http_response_code(404);
+        echo json_encode(['status' => 'error', 'message' => 'Producto no existe']);
+        $mysqli->close();
+        exit;
+    }
+    
+    // Verificar si ya está
+    $stmt = $mysqli->prepare('SELECT 1 FROM LISTA_DESEOS WHERE USUARIO = ? AND COD_PROD = ?');
+    $stmt->bind_param('si', $id_usuario, $id_producto);
+    $stmt->execute();
+    $ya_existe = $stmt->get_result()->num_rows > 0;
+    $stmt->close();
+    
+    // Si es toggle y existe, eliminar
+    if ($accion === 'toggle' && $ya_existe) {
+        $stmt = $mysqli->prepare('DELETE FROM LISTA_DESEOS WHERE USUARIO = ? AND COD_PROD = ?');
+        $stmt->bind_param('si', $id_usuario, $id_producto);
+        $stmt->execute();
+        http_response_code(200);
+        echo json_encode(['status' => 'removed', 'message' => 'Eliminado']);
+        $stmt->close();
+    } else if (!$ya_existe) {
+        // Agregar
+        $stmt = $mysqli->prepare('INSERT INTO LISTA_DESEOS (USUARIO, COD_PROD) VALUES (?, ?)');
+        $stmt->bind_param('si', $id_usuario, $id_producto);
+        if ($stmt->execute()) {
+            http_response_code(201);
+            echo json_encode(['status' => 'added', 'message' => 'Agregado']);
+        } else {
+            http_response_code(500);
+            echo json_encode(['status' => 'error', 'message' => 'Error al agregar']);
+        }
+        $stmt->close();
+    } else {
+        http_response_code(200);
+        echo json_encode(['status' => 'already_added', 'message' => 'Ya en lista']);
+    }
+}
 
-echo json_encode($respuesta);
+$mysqli->close();
 ?>

@@ -7,6 +7,49 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 $pagina = isset($_GET['pagina']) ? $_GET['pagina'] : 'inicio';
+
+// ====================================================================
+// APIS - EJECUTAR ANTES DEL HEADER (para evitar conflictos HTTP)
+// ====================================================================
+$apis = ['api_leer_comentarios', 'api_guardar_comentario', 'api_gestionar_comentario', 
+         'api_registro', 'api_actualizar', 'api_admin_actualizar', 'api_wishlist', 
+         'api_contacto', 'api_admin_crear', 'api_admin_eliminar'];
+
+if (in_array($pagina, $apis)) {
+    switch ($pagina) {
+        case 'api_leer_comentarios':
+            require_once '../app/controller/api_leer_comentarios.php';
+            exit;
+        case 'api_guardar_comentario':
+            require_once '../app/controller/api_guardar_comentario.php';
+            exit;
+        case 'api_gestionar_comentario':
+            require_once '../app/controller/api_gestionar_comentario.php';
+            exit;
+        case 'api_registro':
+            require_once '../app/controller/api_registrarse.php';
+            exit;
+        case 'api_actualizar':
+            require_once '../app/controller/api_actualizar_perfil.php';
+            exit;
+        case 'api_admin_actualizar':
+            require_once '../app/controller/api_admin_actualizar.php';
+            exit;
+        case 'api_wishlist':
+            require_once '../app/controller/api_wishlist.php';
+            exit;
+        case 'api_contacto':
+            require_once '../app/controller/api_contacto.php';
+            exit;
+        case 'api_admin_crear':
+            require_once '../app/controller/api_admin_crear.php';
+            exit;
+        case 'api_admin_eliminar':
+            require_once '../app/controller/api_admin_eliminar.php';
+            exit;
+    }
+}
+
 include views_path . 'layouts/header.php';
 
 switch ($pagina) {
@@ -50,39 +93,11 @@ switch ($pagina) {
     case 'validar':
         require_once '../app/controller/loginV2.php';
         break;
-    case 'api_registro':
-        require_once '../app/controller/api_registrarse.php';
-        exit; // <--- ¡ESTO ES OBLIGATORIO!
-        break;
-    case 'api_actualizar':
-        require_once '../app/controller/api_actualizar_perfil.php';
-        exit;
-        break;
-    case 'api_admin_actualizar':
-        require_once '../app/controller/api_admin_actualizar.php';
-        exit;
-        break;
-    case 'api_wishlist':
-        require_once '../app/controller/api_wishlist.php';
-        exit;
-        break;
-    case 'api_contacto':
-        require_once '../app/controller/api_contacto.php';
-        exit;
-        break;
     case 'admin_dashboard':
         include views_path.'admin/dashboard.php';
         break;
-    case 'api_admin_crear':
-        require_once '../app/controller/api_admin_crear.php';
-        exit;
-        break;
     case 'admin_crear':
         include views_path.'admin/crear.php';
-        break;
-    case 'api_admin_eliminar':
-        require_once '../app/controller/api_admin_eliminar.php';
-        exit;
         break;
     case 'logout':
         // 1. Destrói todas as variáveis de sessão
@@ -113,6 +128,7 @@ switch ($pagina) {
         echo "<div class='alert alert-danger text-center'>Error 404: Página no encontrada.</div>";
 
         break;
+        
 }
 
 include views_path . 'layouts/footer.php';

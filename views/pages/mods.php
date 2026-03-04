@@ -9,7 +9,7 @@ if (!isset($_SESSION['carrito'])) {
     $_SESSION['carrito'] = [];
 }
 
-// Lógica de agregar al carrito (se mantiene igual)
+// Lógica de agregar al carrito
 if (isset($_GET['add_prod']) && is_numeric($_GET['add_prod'])) {
     $producto_id = (int)$_GET['add_prod'];
     if (isset($_SESSION['carrito'][$producto_id])) {
@@ -21,88 +21,103 @@ if (isset($_GET['add_prod']) && is_numeric($_GET['add_prod'])) {
     exit(); 
 }
 
-// --- NUEVO: OBTENER PRODUCTOS COMPRADOS POR EL USUARIO ---
-$ids_comprados = []; // Lista vacía
+// --- CONEXIÓN DIRECTA Y SEGURA A LA BASE DE DATOS ---
+$hostname = "localhost";
+$basedatos = "metro_bd";
+$usuario_db = "root";
+$contrasena_db = "";
+
+$mysqli = new mysqli($hostname, $usuario_db, $contrasena_db, $basedatos);
+
+if ($mysqli->connect_error) {
+    die("<div class='alert alert-danger text-center mt-5'>Error fatal de conexión al servidor del Metro.</div>");
+}
+
+// --- OBTENER COMPRAS Y DESEOS DEL USUARIO ---
+$ids_comprados = []; 
+$ids_deseados = [];
 $usuario_id = $_SESSION['id_usuario'] ?? null;
 
-$ids_deseados=[];
 if($usuario_id) {
-    $api_deseos="http://localhost/mods-metro-exodus/app/controller/api_milista.php?usuario=" .$usuario_id;
-    $json_deseos=@file_get_contents($api_deseos);
+    // Buscar Compras (Directo)
+    $stmt_c = $mysqli->prepare("SELECT COD_PROD FROM COMPRA WHERE USUARIO = ?");
+    if($stmt_c) {
+        $stmt_c->bind_param("s", $usuario_id);
+        $stmt_c->execute();
+        $res_c = $stmt_c->get_result();
+        while($row = $res_c->fetch_assoc()) { $ids_comprados[] = (int)$row['COD_PROD']; }
+        $stmt_c->close();
+    }
 
-    if($json_deseos !== false) {
-        $data_deseos = json_decode($json_deseos, true);
-        if(isset($data_deseos['status']) && $data_deseos['status'] === 'success') {
-            $ids_deseados = $data_deseos['data'];
-        }
+    // Buscar Deseos (Directo)
+    $stmt_d = $mysqli->prepare("SELECT COD_PROD FROM LISTA_DESEOS WHERE USUARIO = ?");
+    if ($stmt_d) {
+        $stmt_d->bind_param("s", $usuario_id);
+        $stmt_d->execute();
+        $res_d = $stmt_d->get_result();
+        while($row = $res_d->fetch_assoc()) { $ids_deseados[] = (int)$row['COD_PROD']; }
+        $stmt_d->close();
     }
 }
 
-if ($usuario_id) {
-    // Ajusta la carpeta si es necesario
-    $api_historial = "http://localhost/mods-metro-exodus/app/controller/api_miscompras.php?usuario=" . $usuario_id;
-    $json_historial = @file_get_contents($api_historial);
-    
-    if ($json_historial !== false) {
-        $data_hist = json_decode($json_historial, true);
-        if (isset($data_hist['status']) && $data_hist['status'] === 'success') {
-            // Extraemos solo los IDs de los productos comprados
-            foreach ($data_hist['data'] as $compra) {
-                $ids_comprados[] = (int)$compra['COD_PROD'];
-            }
-        }
-    }
-}
-// ---------------------------------------------------------
-
-// CARGAR CATÁLOGO COMPLETO
-$api_url = 'http://localhost/MetroModsStore/app/controller/api_listarproductos.php'; 
+// --- CARGAR CATÁLOGO (Directo de PRODUCTOS con JOIN a CATEGORIAS) ---
 $productos = [];
-$mensagem_catalogo = 'Cargando productos...';
+$mensagem_catalogo = '';
 
-$json_data = @file_get_contents($api_url); 
+// Leemos categoría solicitada (si existe) y la escapamos
+$categoria_seleccionada = isset($_GET['categoria']) ? trim($_GET['categoria']) : '';
+$safe_cat = $mysqli->real_escape_string($categoria_seleccionada);
 
-if ($json_data === false) {
-    $mensagem_catalogo = 'Error al conectar con el servicio de productos.';
-} else {
-    $data = json_decode($json_data, true);
-    if (isset($data['status']) && $data['status'] === 'success') {
-        if (!empty($data['productos'])) {
-            $productos = $data['productos'];
-            $mensagem_catalogo = 'Suministros disponibles: ' . count($productos);
-        } else {
-            $mensagem_catalogo = 'No hay suministros en este momento.';
-        }
-    } else {
-        $mensagem_catalogo = 'Error en la API: ' . ($data['message'] ?? 'N/A');
-    }
+$sql = "SELECT P.COD_PROD, P.NOMBRE_PRODUCTO, P.PRECIO, P.IMAGEN, C.NOMBRE_CATEGORIA AS CATEGORIA \n".
+       "FROM PRODUCTOS P LEFT JOIN CATEGORIAS C ON P.ID_CATEGORIA = C.ID_CATEGORIA ";
+
+if ($safe_cat !== '') {
+    $sql .= "WHERE C.NOMBRE_CATEGORIA = '" . $safe_cat . "' ";
 }
-// --- FILTRO POR PRECIO (FRONT) ---
+
+$sql .= "ORDER BY P.COD_PROD ASC";
+
+$res_p = $mysqli->query($sql);
+
+if ($res_p) {
+    while($row = $res_p->fetch_assoc()) {
+        $productos[] = $row;
+    }
+    if (empty($productos)) {
+        $mensagem_catalogo = 'No hay suministros en este momento.';
+    } else {
+        $mensagem_catalogo = 'Suministros disponibles: ' . count($productos);
+        if ($safe_cat !== '') {
+            $mensagem_catalogo = 'Categoría: ' . htmlspecialchars($categoria_seleccionada) . ' (' . count($productos) . ')';
+        }
+    }
+} else {
+    $mensagem_catalogo = 'Error al consultar la base de datos de suministros.';
+}
+
+$mysqli->close(); // Cerramos conexión local
+
+// --- FILTRO POR CATEGORÍA --- (aplicado en la consulta SQL)
+
+// --- FILTRO POR PRECIO ---
 $min = filter_input(INPUT_GET, 'min', FILTER_VALIDATE_FLOAT);
 $max = filter_input(INPUT_GET, 'max', FILTER_VALIDATE_FLOAT);
 
-// Normaliza: si vienen vacíos => null
 $min = ($min === false || $min === null) ? null : (float)$min;
 $max = ($max === false || $max === null) ? null : (float)$max;
 
-// Si ambos vienen y están invertidos, los intercambiamos
 if ($min !== null && $max !== null && $min > $max) {
     [$min, $max] = [$max, $min];
 }
 
 if ($min !== null || $max !== null) {
     $productos_filtrados = array_filter($productos, function($p) use ($min, $max) {
-        // OJO: tu API puede traer PRECIO como string. Lo forzamos a float.
-        $precio = isset($p['PRECIO']) ? (float)$p['PRECIO'] : (float)($p['precio'] ?? 0);
-
+        $precio = isset($p['PRECIO']) ? (float)$p['PRECIO'] : 0;
         if ($min !== null && $precio < $min) return false;
         if ($max !== null && $precio > $max) return false;
         return true;
     });
-
-    // Reindexa para evitar índices raros
     $productos = array_values($productos_filtrados);
-
     $mensagem_catalogo = 'Resultados del filtro: ' . count($productos);
 }
 ?>
@@ -116,62 +131,46 @@ if ($min !== null || $max !== null) {
                 <hr class="border-secondary">
                 <ul class="list-unstyled">
                     <li class="mb-2"><a href="index.php?pagina=mods" class="text-warning text-decoration-none fw-bold">➜ Ver Todo</a></li>
-                    <li class="mb-2"><a href="#" class="text-light text-decoration-none">➜ Armas</a></li>
-                    <li class="mb-2"><a href="#" class="text-light text-decoration-none">➜ Trajes</a></li>
-                    <li class="mb-2"><a href="#" class="text-light text-decoration-none">➜ Suministros</a></li>
+                    <li class="mb-2"><a href="index.php?pagina=mods&categoria=Armas" class="text-light text-decoration-none">➜ Armas</a></li>
+                    <li class="mb-2"><a href="index.php?pagina=mods&categoria=Trajes" class="text-light text-decoration-none">➜ Trajes</a></li>
+                    <li class="mb-2"><a href="index.php?pagina=mods&categoria=Suministros" class="text-light text-decoration-none">➜ Suministros</a></li>
                 </ul>
                 
-                <h4 class="mt-4">Precio</h4>
-                <hr class="border-secondary">
-                <form action="index.php" method="GET">
-                    <input type="hidden" name="pagina" value="mods">
-                    <div class="d-flex gap-2">
-                        <input type="number" name="min" min="0" step="1"
-                        value="<?php echo htmlspecialchars($_GET['min'] ?? ''); ?>"
-                        class="form-control bg-secondary text-light border-0"
-                        placeholder="Min">
-
-                        <input type="number" name="max" min="0" step="1"
-                        value="<?php echo htmlspecialchars($_GET['max'] ?? ''); ?>"
-                        class="form-control bg-secondary text-light border-0"
-                        placeholder="Max">
-                    </div>
-                    <button type="submit" class="btn btn-outline-warning w-100 mt-3">Filtrar</button>
-                </form>
+                <!-- Precio filter removed as requested -->
             </div>
         </div>
 
         <div class="col-md-9">
-            <h2 class="mb-4">Catálogo de Suministros</h2>
+            <?php if (!empty($categoria_seleccionada)): ?>
+                <h2 class="mb-4 text-warning">Catálogo — <?php echo htmlspecialchars($categoria_seleccionada); ?></h2>
+            <?php else: ?>
+                <h2 class="mb-4 text-warning">Catálogo de Suministros</h2>
+            <?php endif; ?>
             
             <div class="row">
                 <?php if (empty($productos)): ?>
-                    <div class="col-12"><div class="alert alert-danger"><?php echo $mensagem_catalogo; ?></div></div>
+                    <div class="col-12"><div class="alert alert-danger"><?php echo htmlspecialchars($mensagem_catalogo); ?></div></div>
                 <?php else: ?>
                     
                     <?php foreach ($productos as $producto): 
-                        // Intenta leer en mayúsculas, si no existe, prueba en minúsculas
-                        $id_prod = isset($producto['COD_PROD']) ? (int)$producto['COD_PROD'] : (int)$producto['cod_prod'];
-                        // Verificamos si YA TIENE este producto
+                        $id_prod = (int)$producto['COD_PROD'];
                         $ya_lo_tiene = in_array($id_prod, $ids_comprados);
-
-                        $en_deseos=in_array($id_prod, $ids_deseados);
-                        $btn_class=$en_deseos ? 'btn-danger text-white' : 'btn-outline-secondary';
+                        
+                        $en_deseos = in_array($id_prod, $ids_deseados);
+                        $btn_class = $en_deseos ? 'btn-danger text-white' : 'btn-outline-secondary';
                         $icon_class = $en_deseos ? 'bi-heart-fill' : 'bi-heart';
                     ?>
-
-
 
                     <div class="col-12 col-md-6 col-lg-4 mb-4">
                         <div class="card h-100 bg-dark border-secondary text-light shadow-sm">
     
-                            <img src="<?php echo htmlspecialchars($producto['IMAGEN'] ?? 'img/placeholder.jpg'); ?>" class="card-img-top border-bottom border-secondary" alt="<?php echo htmlspecialchars($producto['NOMBRE_PRODUCTO']); ?>" style="height: 200px; object-fit: cover; object-position: center;">
+                            <img src="<?php echo htmlspecialchars($producto['IMAGEN'] ?? 'img/placeholder.jpg'); ?>" class="card-img-top border-bottom border-secondary" alt="<?php echo htmlspecialchars($producto['NOMBRE_PRODUCTO'] ?? 'Producto'); ?>" style="height: 200px; object-fit: cover; object-position: center;">
 
                             <div class="card-body d-flex flex-column p-4">
                                 <div class="d-flex align-items-start mb-3">
                                     <div class="text-warning me-3 fs-1"><i class="bi bi-box-seam"></i></div>
                                     <div>
-                                        <h5 class="card-title text-warning fw-bold mb-1"><?php echo htmlspecialchars($producto['NOMBRE_PRODUCTO']); ?></h5>
+                                        <h5 class="card-title text-warning fw-bold mb-1"><?php echo htmlspecialchars($producto['NOMBRE_PRODUCTO'] ?? 'Sin Nombre'); ?></h5>
                                         <small class="text-secondary">ID Ref: <?php echo $id_prod; ?></small>
                                     </div>
                                 </div>
@@ -182,7 +181,7 @@ if ($min !== null || $max !== null) {
                                 <div class="mt-auto">
                                     <div class="d-flex justify-content-between align-items-center mb-3">
                                         <span class="text-secondary">Precio:</span>
-                                        <h4 class="fw-bold text-light mb-0">Bs. <?php echo number_format($producto['PRECIO'], 2, '.', ','); ?></h4>
+                                        <h4 class="fw-bold text-light mb-0">Bs. <?php echo number_format((float)($producto['PRECIO'] ?? 0), 2, '.', ','); ?></h4>
                                     </div>
                                     
                                     <div class="d-grid gap-2">
@@ -208,7 +207,6 @@ if ($min !== null || $max !== null) {
                         </div>
                     </div>
                     <?php endforeach; ?>
-
                 <?php endif; ?>
             </div>
         </div>

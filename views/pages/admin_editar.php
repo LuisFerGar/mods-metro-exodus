@@ -20,7 +20,7 @@ if($id <= 0){
     exit;
 }
 
-// 1. BUSCAR EL PRODUCTO (Cambiamos la consulta para traer la información actualizada)
+// 1. BUSCAR EL PRODUCTO
 $stmt = $mysqli->prepare("SELECT * FROM PRODUCTOS WHERE COD_PROD=?");
 $stmt->bind_param("i",$id);
 $stmt->execute();
@@ -31,12 +31,12 @@ if(!$prod){
     exit;
 }
 
-// 2. BUSCAR TODAS LAS CATEGORÍAS (Para armar el menú desplegable)
+// 2. BUSCAR TODAS LAS CATEGORÍAS (De la tabla real)
 $categorias = [];
-$res_cat = $mysqli->query("SELECT * FROM CATEGORIAS");
+$res_cat = $mysqli->query("SELECT ID_CATEGORIA, NOMBRE_CATEGORIA FROM CATEGORIAS");
 if($res_cat) {
-    while($c = $res_cat->fetch_assoc()) {
-        $categorias[] = $c;
+    while($row = $res_cat->fetch_assoc()) {
+        $categorias[] = $row;
     }
 }
 ?>
@@ -44,7 +44,7 @@ if($res_cat) {
 <div class="container py-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h3 class="text-warning fw-bold mb-0">EDITAR SUMINISTRO #<?php echo (int)$prod['COD_PROD']; ?></h3>
-        <a href="index.php?pagina=dashboard" class="btn btn-outline-secondary">Volver</a>
+        <a href="index.php?pagina=admin_dashboard" class="btn btn-outline-secondary">Volver</a>
     </div>
 
     <div class="card bg-dark border-secondary text-light">
@@ -84,7 +84,7 @@ if($res_cat) {
                     <input class="form-control bg-secondary text-light border-0"
                            name="imagen" required
                            value="<?php echo htmlspecialchars($prod['IMAGEN']); ?>">
-                    <small class="text-secondary">Ej: img/productos/arma1.jpg</small>
+                    <small class="text-secondary">Ej: img/mods/arma1.jpg</small>
                 </div>
 
                 <div class="d-flex gap-2">
@@ -92,7 +92,7 @@ if($res_cat) {
                         <i class="bi bi-save2-fill me-2"></i>Guardar cambios
                     </button>
                     <a class="btn btn-outline-danger"
-                       href="index.php?pagina=dashboard">
+                       href="index.php?pagina=admin_dashboard">
                        Cancelar
                     </a>
                 </div>

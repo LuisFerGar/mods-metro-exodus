@@ -9,21 +9,22 @@ if (!isset($_SESSION['id_usuario'])) {
 $mysqli = new mysqli("localhost", "root", "", "metro_bd", 3306);
 
 $accion = $_POST['accion'] ?? '';
-$id_valoracion = $_POST['id_valoracion'] ?? 0;
+$id_reporte = isset($_POST['id_reporte']) ? (int)$_POST['id_reporte'] : 0;
 $usuario_actual = $_SESSION['id_usuario'];
 
 if ($accion === 'eliminar') {
-    $sql = "DELETE FROM VALORACIONES WHERE ID_VALORACION = ? AND USUARIO = ?";
+    // ID_REPORTE ahora identifica la fila en la bitácora
+    $sql = "DELETE FROM BITACORA WHERE ID_REPORTE = ? AND USUARIO = ?";
     $stmt = $mysqli->prepare($sql);
-    $stmt->bind_param("is", $id_valoracion, $usuario_actual);
+    $stmt->bind_param("is", $id_reporte, $usuario_actual);
     $stmt->execute();
     echo json_encode(['status' => 'success', 'message' => 'Comentario eliminado.']);
 
 } elseif ($accion === 'editar') {
     $nuevo_texto = trim($_POST['comentario'] ?? '');
-    $sql = "UPDATE VALORACIONES SET COMENTARIO = ? WHERE ID_VALORACION = ? AND USUARIO = ?";
+    $sql = "UPDATE BITACORA SET COMENTARIO = ? WHERE ID_REPORTE = ? AND USUARIO = ?";
     $stmt = $mysqli->prepare($sql);
-    $stmt->bind_param("sis", $nuevo_texto, $id_valoracion, $usuario_actual);
+    $stmt->bind_param("sis", $nuevo_texto, $id_reporte, $usuario_actual);
     $stmt->execute();
     echo json_encode(['status' => 'success', 'message' => 'Comentario editado.']);
 }
